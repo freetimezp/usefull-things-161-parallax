@@ -1,36 +1,35 @@
 const projectData = [
-  {
-    title: "Euphoria",
-    image: "./assets/images/img1.jpg",
-    isAlternate: false,
-  },
-  {
-    title: "Elegant",
-    image: "./assets/images/img2.jpg",
-    isAlternate: true,
-  },
-  {
-    title: "Beauty",
-    image: "./assets/images/img3.jpg",
-    isAlternate: false,
-  },
-  {
-    title: "Lovely",
-    image: "./assets/images/img4.jpg",
-    isAlternate: true,
-  },
-  {
-    title: "Relax",
-    image: "./assets/images/img5.jpg",
-    isAlternate: false,
-  },
-  {
-    title: "Design",
-    image: "./assets/images/img6.jpg",
-    isAlternate: true
-  }
+    {
+        title: "Flowers",
+        image: "./assets/images/img1.jpg",
+        isAlternate: false,
+    },
+    {
+        title: "Talanted",
+        image: "./assets/images/img2.jpg",
+        isAlternate: true,
+    },
+    {
+        title: "Food",
+        image: "./assets/images/img3.jpg",
+        isAlternate: false,
+    },
+    {
+        title: "Photography",
+        image: "./assets/images/img4.jpg",
+        isAlternate: true,
+    },
+    {
+        title: "Cubes",
+        image: "./assets/images/img5.jpg",
+        isAlternate: false,
+    },
+    {
+        title: "Robots",
+        image: "./assets/images/img6.jpg",
+        isAlternate: true,
+    },
 ];
-
 
 const lerp = (start, end, factor) => start + (end - start) * factor;
 
@@ -40,7 +39,7 @@ const config = {
     BUFFER_SIZE: 15,
     CLEANUP_THRESHOLD: 50,
     MAX_VELOCITY: 120,
-    SNAP_DURATION: 500
+    SNAP_DURATION: 500,
 };
 
 const state = {
@@ -58,9 +57,8 @@ const state = {
     snapStartY: 0,
     snapTargetY: 0,
     lastScrollTime: Date.now(),
-    isScrolling: false
+    isScrolling: false,
 };
-
 
 const createParallaxImage = (imageElement) => {
     let bounds = null;
@@ -68,24 +66,24 @@ const createParallaxImage = (imageElement) => {
     let targetTranslateY = 0;
 
     const updateBounds = () => {
-        if(imageElement) {
+        if (imageElement) {
             const rect = imageElement.getBoundingClientRect();
 
             bounds = {
                 top: rect.top + window.scrollY,
-                bottom: rect.bottom + window.scrollY
+                bottom: rect.bottom + window.scrollY,
             };
         }
     };
 
     const update = (scroll) => {
-        if(!bounds) return;
+        if (!bounds) return;
 
         const relativeScroll = -scroll - bounds.top;
         targetTranslateY = relativeScroll * 0.2;
         currentTranslateY = lerp(currentTranslateY, targetTranslateY, 0.1);
 
-        if(Math.abs(currentTranslateY - targetTranslateY) > 0.01) {
+        if (Math.abs(currentTranslateY - targetTranslateY) > 0.01) {
             imageElement.style.transform = `translateY(${currentTranslateY}px) scale(${1})`;
         }
     };
@@ -95,16 +93,14 @@ const createParallaxImage = (imageElement) => {
     return { update, updateBounds };
 };
 
-
 const getProjectData = (index) => {
     const dataIndex = ((Math.abs(index) % projectData.length) + projectData.length) % projectData.length;
 
     return projectData[dataIndex];
 };
 
-
 const createProjectElement = (index) => {
-    if(state.projects.has(index)) return;
+    if (state.projects.has(index)) return;
 
     const template = document.querySelector(".template");
     const project = template.cloneNode(true);
@@ -138,19 +134,17 @@ const createProjectElement = (index) => {
                         <img src="${data.image}" alt="${data.title}" />
                     </div>
             </div>`;
-    
+
     project.style.transform = `translateY(${index * state.projectHeight}px)`;
     document.querySelector(".project-list").appendChild(project);
     state.projects.set(index, project);
 
-
     const img = project.querySelector("img");
-    
-    if(img) {
+
+    if (img) {
         state.parallaxImages.set(index, createParallaxImage(img));
     }
 };
-
 
 const createInitialProjects = () => {
     for (let i = -config.BUFFER_SIZE; i <= config.BUFFER_SIZE; i++) {
@@ -158,26 +152,21 @@ const createInitialProjects = () => {
     }
 };
 
-
 const getCurrentIndex = () => Math.round(-state.targetY / state.projectHeight);
-
 
 const checkAndCreateProjects = () => {
     const currentIndex = getCurrentIndex();
     const minNeeded = currentIndex - config.BUFFER_SIZE;
     const maxNeeded = currentIndex + config.BUFFER_SIZE;
 
-    for(let i = minNeeded; i <= maxNeeded; i++) {
-        if(!state.projects.has(i)) {
+    for (let i = minNeeded; i <= maxNeeded; i++) {
+        if (!state.projects.has(i)) {
             createProjectElement(i);
         }
     }
 
     state.projects.forEach((project, index) => {
-        if(
-            index < currentIndex - config.CLEANUP_THRESHOLD ||
-            index > currentIndex + config.CLEANUP_THRESHOLD
-        ) {
+        if (index < currentIndex - config.CLEANUP_THRESHOLD || index > currentIndex + config.CLEANUP_THRESHOLD) {
             project.remove();
             state.projects.delete(index);
             state.parallaxImages.delete(index);
@@ -185,13 +174,11 @@ const checkAndCreateProjects = () => {
     });
 };
 
-
 const getClosestSnapPoint = () => {
     const currentIndex = Math.round(-state.targetY / state.projectHeight);
 
     return -currentIndex * state.projectHeight;
 };
-
 
 const initialSetup = () => {
     state.isSnapping = true;
@@ -200,7 +187,6 @@ const initialSetup = () => {
     state.snapTargetY = getClosestSnapPoint();
 };
 
-
 const updateSnap = () => {
     const elapsed = Date.now() - state.snapStartTime;
     const progress = Math.min(elapsed / config.SNAP_DURATION, 1);
@@ -208,30 +194,29 @@ const updateSnap = () => {
     const t = 1 - Math.pow(1 - progress, 3);
     state.targetY = state.snapStartY + (state.snapTargetY - state.snapStartY) * t;
 
-    if(progress >= 1) {
+    if (progress >= 1) {
         state.isSnapping = false;
         state.targetY = state.snapTargetY;
     }
 };
 
-
 const animate = () => {
     const now = Date.now();
     const timeSinceLastScroll = now - state.lastScrollTime;
 
-    if(!state.isSnapping && !state.isDragging && timeSinceLastScroll > 100) {
+    if (!state.isSnapping && !state.isDragging && timeSinceLastScroll > 100) {
         const snapPoint = getClosestSnapPoint();
 
-        if(Math.abs(state.targetY - snapPoint) > 1) {
+        if (Math.abs(state.targetY - snapPoint) > 1) {
             initialSetup();
         }
     }
 
-    if(state.isSnapping) {
+    if (state.isSnapping) {
         updateSnap();
     }
 
-    if(!state.isDragging) {
+    if (!state.isDragging) {
         state.currentY += (state.targetY - state.currentY) * config.LERP_FACTOR;
     }
 
@@ -242,7 +227,7 @@ const animate = () => {
         project.style.transform = `translateY(${y}px)`;
 
         const parallaxImage = state.parallaxImages.get(index);
-        if(parallaxImage) {
+        if (parallaxImage) {
             parallaxImage.update(state.currentY);
         }
     });
@@ -250,19 +235,14 @@ const animate = () => {
     requestAnimationFrame(animate);
 };
 
-
 const handleWheel = (e) => {
     e.preventDefault();
     state.isSnapping = false;
     state.lastScrollTime = Date.now();
 
     const scrollDelta = e.deltaY * config.SCROLL_SPEED;
-    state.targetY -= Math.max(
-        Math.min(scrollDelta, config.MAX_VELOCITY),
-        -config.MAX_VELOCITY
-    );
+    state.targetY -= Math.max(Math.min(scrollDelta, config.MAX_VELOCITY), -config.MAX_VELOCITY);
 };
-
 
 const handleTouchStart = (e) => {
     state.isDragging = true;
@@ -272,18 +252,16 @@ const handleTouchStart = (e) => {
     state.lastScrollTime = Date.now();
 };
 
-
 const handleTouchMove = (e) => {
-    if(!state.isDragging) return;
+    if (!state.isDragging) return;
 
     const deltaY = (e.touches[0].clientY - state.startY) * 1.5;
     state.targetY = state.lastY + deltaY;
     state.lastScrollTime = Date.now();
-}; 
-
+};
 
 const handleTouchEnd = () => {
-  state.isDragging = false;
+    state.isDragging = false;
 };
 
 const handleResize = () => {
@@ -294,12 +272,11 @@ const handleResize = () => {
 
         const parallaxImage = state.parallaxImages.get(index);
 
-        if(parallaxImage) {
+        if (parallaxImage) {
             parallaxImage.updateBounds();
         }
     });
 };
-
 
 const initializeScroll = () => {
     window.addEventListener("wheel", handleWheel, { passive: false });
@@ -313,16 +290,3 @@ const initializeScroll = () => {
 };
 
 document.addEventListener("DOMContentLoaded", initializeScroll);
-
-
-
-
-
-
-
-
-
-
-
-
-
